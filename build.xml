@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Copyright (c) Members of the EGEE Collaboration. 2004. See http://www.eu-egee.org/partners/ 
+	for details on the copyright holders. Licensed under the Apache License, 
+	Version 2.0 (the "License"); you may not use this file except in compliance 
+	with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 
+	Unless required by applicable law or agreed to in writing, software distributed 
+	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES 
+	OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
+	the specific language governing permissions and limitations under the License. 
+	Authors: Joni Hahkala <joni.hahkala@cern.ch> -->
+
+<project name="trustmanager-axis2" default="compile" basedir=".">
+
+	<property name="jdk.target.version.force" value="1.5" />
+
+	<property name="workspace.dir" value=".." />
+	<property name="project-name" value="trustmanager-axis2" />
+	<property name="jar.name" value="${project-name}" />
+
+	<property name="stage" value="${workspace.dir}/stage" />
+	<property name="java.share.path" value="/usr/share/java" />
+	<property name="stage.java.share.path" value="${stage}${java.share.path}" />
+
+	<property name="prefix" value="tmp-prefix" />
+	<property name="package.prefix" value="${prefix}" />
+	<property name="package.java.share.path" value="${package.prefix}/usr/share/java" />
+	<property name="package.javadoc.path" value="${package.prefix}/usr/share/doc/${project-name}/html" />
+	<property name="package.doc.path" value="${package.prefix}/usr/share/doc/${project-name}" />
+
+	<!-- set the default locations, setting these during call to ant will override 
+		these -->
+	<property name="log4j.location" value="${java.share.path}" />
+	<property name="bouncycastle.location" value="${java.share.path}" />
+	<property name="junit.location" value="${java.share.path}" />
+	<property name="tomcat.location" value="${java.share.path}" />
+	<condition property="axis2.subdir" value="/axis2" else="">
+		<available file="${java.share.path}/axis2" />
+	</condition>
+	<property name="axis2.location" value="${java.share.path}${axis2.subdir}" />
+	<property name="commons-httpclient.location" value="${java.share.path}" />
+
+	<property name="trustmanager.location" value="${stage.java.share.path}" />
+	<property name="build.dir" value="build" />
+	<property name="build-test" value="build-test" />
+
+	<target name="init" description="Module specific initialization tasks">
+
+		<echo message="log4j.location              	=${log4j.location}" />
+		<echo message="bouncycastle.location        =${bouncycastle.location}" />
+		<echo message="junit.location           	=${junit.location}" />
+		<echo message="tomcat.location              =${tomcat.location}" />
+		<echo message="axis2.location         		=${axis2.location}" />
+		<echo message="commons-httpclient.location	=${commons-httpclient.location}" />
+		<echo message="trustmanager.location        =${trustmanager.location}" />
+		<echo message="stage        				=${stage}" />
+		<echo message="stage.java.share.path        =${stage.java.share.path}" />
+
+		<echo message="System java share dir ${java.share.path}:" />
+		<exec executable="ls" failifexecutionfails="false" failonerror="false">
+			<arg value="-al" />
+			<arg value="${java.share.path}" />
+		</exec>
+
+		<echo message="System java share axis2 dir ${java.share.path}/axis2:" />
+		<exec executable="ls" failifexecutionfails="false" failonerror="false">
+			<arg value="-al" />
+			<arg value="${java.share.path}/axis2" />
+		</exec>
+
+		<echo message="stage java share dir ${stage.java.share.path}:" />
+		<exec executable="ls" failifexecutionfails="false" failonerror="false">
+			<arg value="-al" />
+			<arg value="${stage.java.share.path}" />
+		</exec>
+
+		<!-- Set compile classpaths -->
+		<path id="compile.classpath">
+
+			<fileset dir="${log4j.location}">
+				<include name="**/log4j*.jar" />
+			</fileset>
+			<fileset dir="${bouncycastle.location}">
+				<include name="**/bcprov*.jar" />
+			</fileset>
+			<fileset dir="${tomcat.location}">
+				<include name="**/servlet*.jar" />
+			</fileset>
+			<fileset dir="${axis2.location}">
+				<include name="**/axis2*.jar" />
+				<include name="**/wsdl*.jar" />
+				<include name="**/neethi*.jar" />
+				<include name="**/geronimo*.jar" />
+				<include name="**/axiom*.jar" />
+				<include name="**/XmlSchema*.jar" />
+				<include name="**/xmlbeans*.jar" />
+			</fileset>
+			<fileset dir="${commons-httpclient.location}">
+				<include name="**/commons-httpclient*.jar" />
+			</fileset>
+			<pathelement location="${trustmanager.location}/trustmanager.jar" />
+		</path>
+		<path id="test.classpath">
+
+			<!-- compile classpath -->
+			<path refid="compile.classpath" />
+			<fileset dir="${junit.location}">
+				<include name="**/junit*.jar" />
+			</fileset>
+
+		</path>
+	</target>
+
+	<target name="compile" depends="init">
+		<mkdir dir="${build.dir}" />
+		<javac srcdir="src" destdir="${build.dir}" deprecation="false" failonerror="true" debug="true" target="${jdk.target.version.force}">
+			<classpath refid="compile.classpath" />
+		</javac>
+
+		<copy todir="${build.dir}">
+			<fileset dir="src">
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+
+		<mkdir dir="lib" />
+		<tstamp>
+			<format property="build.time" pattern="yyyy-MM-dd HH:mm" locale="en,UK" />
+		</tstamp>
+
+		<jar destfile="lib/${jar.name}.jar" basedir="${build.dir}" includes="**/*.class,**/*.properties" index="true">
+			<manifest>
+				<attribute name="Package-Title" value="${project-name}" />
+				<attribute name="Package-Version" value="${module.version}" />
+				<attribute name="Package-Vendor" value="EMI" />
+				<attribute name="build" value="${build.time}" />
+				<attribute name="build-by" value="${user.name}" />
+				<attribute name="build-OS" value="${os.name}" />
+				<!-- <attribute name="build host" value="${buildhost.NAME}.${buildhost.DOMAIN}"/> -->
+			</manifest>
+		</jar>
+
+	</target>
+
+	<target name="clean">
+		<delete dir="${package.prefix}" />
+		<delete dir="${build.dir}" />
+		<delete dir="${build-test}" />
+		<delete dir="lib" />
+	</target>
+
+	<target name="doc" description="Build Javadoc">
+
+		<mkdir dir="${package.javadoc.path}" />
+
+		<javadoc packagenames="org.glite.security.*" classpathref="compile.classpath" sourcepath="src" destdir="${package.javadoc.path}" author="true" version="true" use="true" access="public" />
+
+		<copy todir="${package.doc.path}" file="LICENSE" />
+
+<!--		<copy todir="${package.doc.path}">
+			<fileset dir="doc">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		-->
+	</target>
+
+
+	<target name="compile-testapp" depends="wsdl2java,copyImpl-test,compile">
+		<echo message="Compiling wsdl2 files" />
+
+		<javac srcdir="${build-test}/src" destdir="${build-test}/classes" deprecation="false" failonerror="true" debug="true">
+			<classpath>
+				<pathelement path="${build.dir}"/>
+				<path refid="compile.classpath"/>
+			</classpath>
+		</javac>
+
+	</target>
+
+	<target name="dist" depends="compile, doc">
+		<mkdir dir="${package.java.share.path}" />
+		<copy todir="${package.java.share.path}">
+			<fileset dir="lib">
+				<include name="**/*.jar" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="stage" depends="dist">
+		<mkdir dir="${stage.java.share.path}" />
+		<copy todir="${stage.java.share.path}">
+			<fileset dir="lib">
+				<include name="**/*.jar" />
+			</fileset>
+		</copy>
+	</target>
+	<!-- end of checked build routines, below is old stuff, to be reviewed, 
+		and moved to trustmanager-test -->
+
+	<target name="wsdl2java" depends="clean,init">
+		<delete dir="${build-test}/src" />
+		<java classname="org.apache.axis2.wsdl.WSDL2Java" fork="true">
+			<classpath refid="compile.classpath" />
+			<arg value="-d" />
+			<arg value="xmlbeans" />
+			<arg value="-uri" />
+			<arg file="test/interface/EchoService.wsdl" />
+			<arg value="-ss" />
+			<arg value="-g" />
+			<arg value="-sd" />
+			<arg value="-o" />
+			<arg file="${build-test}" />
+			<arg value="-p" />
+			<arg value="org.glite.security.trustmanager.axis2" />
+		</java>
+
+		<!-- Move the schema folder to classpath -->
+		<move todir="${build-test}/classes">
+			<fileset dir="${build-test}/resources">
+				<include name="**/*schema*/**/*.class" />
+				<include name="**/*schema*/**/*.xsb" />
+			</fileset>
+		</move>
+
+	</target>
+
+	<target name="copyImpl-test" depends="wsdl2java">
+		<copy todir="${build-test}/src" overwrite="true">
+			<fileset dir="test/src">
+				<!-- implementation files -->
+				<include name="**/*.java" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="jar_wsdl" depends="compile-testapp">
+		<jar jarfile="lib/axis2_trustmanager_test.jar">
+			<fileset dir="${build-test}/classes" />
+		</jar>
+	</target>
+
+	<!-- build an .aar file for axis2 web services -->
+	<target name="aar" depends="compile-testapp">
+		<delete dir="${build-test}/META-INF" />
+		<mkdir dir="${build-test}/classes/META-INF" />
+		<mkdir dir="lib" />
+		<mkdir dir="${build-test}/classes/lib" />
+		<copy todir="${build-test}/classes/lib" flatten="true" overwrite="true">
+			<fileset dir="${log4j.location}">
+				<include name="**/log4j*.jar" />
+			</fileset>
+			<fileset dir="${bouncycastle.location}">
+				<include name="**/bcprov*.jar" />
+			</fileset>
+			<fileset dir="${trustmanager.location}">
+				<include name="trustmanager.jar" />
+			</fileset>
+		</copy>
+
+
+		<copy todir="${build-test}/classes/META-INF" overwrite="true">
+			<fileset dir="${build-test}/resources">
+				<!-- axis2 web services definitions file -->
+				<include name="services.xml" />
+			</fileset>
+			<fileset dir="test/interface">
+				<include name="EchoService.wsdl" />
+			</fileset>
+		</copy>
+		<jar jarfile="lib/EchoService.aar">
+			<fileset dir="${build-test}/classes" />
+		</jar>
+	</target>
+
+	<target name="runLogin" depends="aar" description="run simple Login client">
+		<java classname="org.glite.security.trustmanager.axis2.EchoServiceClient" >
+			<classpath>
+				<pathelement path="${build.dir}/classes"/>
+				<path refid="compile.classpath"/>
+				
+			</classpath>
+		</java>
+	</target>
+
+	<target name="usage" description="Build file usage info (default task)">
+		<echo message=" " />
+		<echo message="${project-name} " />
+		<echo message="-------------------------------------------------------" />
+		<echo message=" " />
+		<echo message="Available Targets:" />
+		<echo message=" " />
+		<echo message=" Compiling:" />
+		<echo message="  compile           - Compiles the WSDL2Java source code" />
+		<echo message=" " />
+		<echo message=" Compiling client:" />
+		<echo message="  compile_client           - Compiles the client source code" />
+		<echo message=" " />
+		<echo message=" Cleaning up:" />
+		<echo message="  clean             - Delete class files" />
+		<echo message=" " />
+		<echo message=" WSDL:" />
+		<echo message="  wsdl2java               - Generate source from WSDL" />
+		<echo message=" " />
+		<echo message=" AAR:" />
+		<echo message="  aar               - Generate an .aar for deployment into WEB-INF/services" />
+		<echo message=" " />
+		<echo message=" Executing:" />
+		<echo message="  runLogin               - Execute the runLogin client" />
+	</target>
+
+</project>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:ns2="http://axis2.trustmanager.security.glite.org" xmlns:ns1="http://io.java/xsd" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:ns0="http://rmi.java/xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" targetNamespace="http://axis2.trustmanager.security.glite.org">
+    <wsdl:types>
+        <xs:schema xmlns:ax21="http://rmi.java/xsd" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://rmi.java/xsd">
+            <xs:complexType name="RemoteException">
+                <xs:complexContent>
+                    <xs:extension base="ns1:IOException">
+                        <xs:sequence>
+                            <xs:element minOccurs="0" name="cause" nillable="true" type="xs:anyType"/>
+                            <xs:element minOccurs="0" name="message" nillable="true" type="xs:string"/>
+                            <xs:element minOccurs="0" name="detail" nillable="true" type="xs:anyType"/>
+                        </xs:sequence>
+                    </xs:extension>
+                </xs:complexContent>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema xmlns:ax22="http://io.java/xsd" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://io.java/xsd">
+            <xs:complexType name="IOException">
+                <xs:complexContent>
+                    <xs:extension base="ns2:Exception">
+                        <xs:sequence/>
+                    </xs:extension>
+                </xs:complexContent>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema xmlns:ns="http://axis2.trustmanager.security.glite.org" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://axis2.trustmanager.security.glite.org">
+            <xs:complexType name="Exception">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Exception" nillable="true" type="xs:anyType"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="RemoteException">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="RemoteException" nillable="true" type="ns0:RemoteException"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="getAttributesResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element minOccurs="0" name="return" nillable="true" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="getAttributesRequest"/>
+    <wsdl:message name="getAttributesResponse">
+        <wsdl:part name="parameters" element="ns2:getAttributesResponse"/>
+    </wsdl:message>
+    <wsdl:message name="RemoteException">
+        <wsdl:part name="parameters" element="ns2:RemoteException"/>
+    </wsdl:message>
+    <wsdl:portType name="EchoServicePortType">
+        <wsdl:operation name="getAttributes">
+            <wsdl:input message="ns2:getAttributesRequest" wsaw:Action="urn:getAttributes"/>
+            <wsdl:output message="ns2:getAttributesResponse" wsaw:Action="urn:getAttributesResponse"/>
+            <wsdl:fault message="ns2:RemoteException" name="RemoteException" wsaw:Action="urn:getAttributesRemoteException"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="EchoServiceSOAP11Binding" type="ns2:EchoServicePortType">
+        <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+        <wsdl:operation name="getAttributes">
+            <soap:operation soapAction="urn:getAttributes" style="document"/>
+            <wsdl:input>
+                <soap:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="RemoteException">
+                <soap:fault use="literal" name="RemoteException"/>
+            </wsdl:fault>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="EchoServiceSOAP12Binding" type="ns2:EchoServicePortType">
+        <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+        <wsdl:operation name="getAttributes">
+            <soap12:operation soapAction="urn:getAttributes" style="document"/>
+            <wsdl:input>
+                <soap12:body use="literal"/>
+            </wsdl:input>
+            <wsdl:output>
+                <soap12:body use="literal"/>
+            </wsdl:output>
+            <wsdl:fault name="RemoteException">
+                <soap12:fault use="literal" name="RemoteException"/>
+            </wsdl:fault>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:binding name="EchoServiceHttpBinding" type="ns2:EchoServicePortType">
+        <http:binding verb="POST"/>
+        <wsdl:operation name="getAttributes">
+            <http:operation location="EchoService/getAttributes"/>
+            <wsdl:input>
+                <mime:content type="text/xml" part="getAttributes"/>
+            </wsdl:input>
+            <wsdl:output>
+                <mime:content type="text/xml" part="getAttributes"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="EchoService">
+        <wsdl:port name="EchoServiceSOAP11port_http" binding="ns2:EchoServiceSOAP11Binding">
+            <soap:address location="http://localhost:8080/axis2/services/EchoService"/>
+        </wsdl:port>
+        <wsdl:port name="EchoServiceSOAP12port_http" binding="ns2:EchoServiceSOAP12Binding">
+            <soap12:address location="http://localhost:8080/axis2/services/EchoService"/>
+        </wsdl:port>
+        <wsdl:port name="EchoServiceHttpport" binding="ns2:EchoServiceHttpBinding">
+            <http:address location="http://localhost:8080/axis2/services/EchoService"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
